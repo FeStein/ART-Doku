@@ -1,4 +1,50 @@
 \chapter{Lenkregelung}\label{sec:Lenkregelung}
 In diesem Abschnitt wird die Lenkregelung des Systems betrachtet (Aufgabe 2). Da
 beide Fahrzeuge mit den gleichen Sensoren ausgestattet sind, ist die Regelung
-für beide Fahrzeuge gleich und es wird lediglich ein Fahrzeug betrachtet.
+für beide Fahrzeuge gleich und es wird lediglich ein Fahrzeug betrachtet. Ziel
+war die Regelung mit einem PID-Regler, wobei der PID-Regler Block von Simulink
+nicht verwendet werden durfte.
+\begin{figure}[hbt]
+\centering
+\begin{subfigure}{\textwidth}
+    \centering
+    \includegraphics*[width=\textwidth]{figures/Lenkregelung.png}
+\end{subfigure}
+    \caption{Übersicht der Lenkregelung beider Fahrzeuge. Beinhaltet die
+        Generierung der Stellgröße (1) sowie den PID-Regler (2).
+    \label{fig:lenkregelung}}
+\end{figure}    
+In einem ersten Schritt haben wir uns die Eingangsgröße für den Regler überlegt.
+Da zwei Farbsensoren vorhanden sind (jeweils rechts und links), müssen diese so
+verrechnet werden, dass lediglich ein zusammengefasstes Signal vorhanden ist.
+
+Der Sensor gibt durchgehend einen positiven Wert zurück, allerdings ist der Wert
+geringer, je mehr schwarz erkannt wird. Somit verringert sich der Wert des
+linken Sensors bei der Einfahrt in eine Linkskurve, der Wert des rechten Sensors
+erhöht sich dabei da weniger bzw. analog mehr Licht reflektiert wird. Bei einer
+perfekten Geräteausfahrt sind die Werte beider Sensoren gleich
+($c_\mathrm{links} = c_\mathrm{rechts} = 50$). Um beide Werte zu verschmelzen,
+werden die Werte einfach subtrahiert:
+\begin{align*}
+    c = c_\mathrm{links} - c_\mathrm{rechts}
+\end{align*}
+Für die Geräteausfahrt wird die Stellgröße $c$ dementsprechend $0$, da beide
+Sensoren den gleiche Wert annehmen. Dies ist gleichzeitig auch das Regelziel für
+den PID-Regler. Durch die Subtraktion der beiden Werte wird die Stellgröße stark
+negativ für eine Linkskurve ($c_\mathrm{links}$ wird kleiner und
+$c_\mathrm{rechts}$ wird größer). Bei einer Rechtskurve wäre dies genau
+umgekehrt, jedoch kommt dies nicht in unserem Modell vor. In
+Abbildung~\ref{fig:lenkregelung} ist dieser Teil mit (1) markiert. Der Target
+Block wird dabei genutzt um die Regelabweichung zu berechnen. Benötigt wird er
+eigentlich nicht, da das Regelziel $c=0$ ist.
+
+Im zweiten Schritt wurde dann ein PID-Regler in Simulink implementiert. Die
+jeweiligen Parameter $k_P$, $k_I$ und $k_D$ sind in den jeweiligen Gain Blöcken
+in Simulink (Car\_2\_Steering\_P etc.). Durch ausprobieren sind wir auf die
+folgenden idealen Werte für den PID-Regler gekommen:
+\begin{align*}
+    k_P = 1 \\
+    k_I = 0 \\
+    k_D = 0
+\end{align*}
+
