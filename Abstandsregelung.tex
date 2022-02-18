@@ -1,0 +1,81 @@
+\chapter{Abstandsregelung}\label{chp:Abstandsregelung}
+\begin{figure}[hbt]
+\centering
+\begin{subfigure}{0.69\textwidth}
+    \centering
+    \includegraphics*[width=\textwidth]{figures/abstand_aufgabenstelllung.png}
+\end{subfigure}
+    \caption{Schematischer Aufbau der Regelung in der Aufgabenstellung
+    \label{fig:abstand_as}}
+\end{figure}    
+
+%-------------------------------------------------------------------------------
+\section{Übersicht Gesamtsystem}\label{sec:Übersicht Gesamtsystem}
+ToDo: Gesamtsystem müsste auch mal fertig sein
+
+%-------------------------------------------------------------------------------
+\section{Zustandsgenerator}\label{sec:zustandsgenerator}
+Ziel des Zustandsgenerators ist es die jeweiligen Positionen der Fahrzeuge aus
+den gegebenen Sensoren (Position des rechten/linken Rads, Ultraschallsensor) zu
+generieren. Eine Übersicht ist in Abbildung~\ref{fig:zustandsgenerator}
+dargestellt.
+\begin{figure}[hbt]
+\centering
+\begin{subfigure}{0.79\textwidth}
+    \centering
+    \includegraphics*[width=\textwidth]{figures/zustandsgenerator.png}
+\end{subfigure}
+    \caption{Übersicht über die Implementierung des Zustandsgenerators
+    \label{fig:zustandsgenerator}}
+\end{figure}    
+Zunächst wird der kommulierte Winkel zwischen den beiden Rädern gemittelt. Dies
+ist notwendig, da das rechte und das linke Rad sich unterschiedlich schnell
+drehen bei einer Kurvenfahrt und somit auch eine unterschiedliche Position
+angeben würden. Durch eine anschließende Multiplikation mit dem Reifenradius $r$
+erhält man die Position des zweiten Fahrzeugs in Metern.
+
+Für die Position des ersten Fahrzeugs wird auf die Position des ersten Fahrzeugs
+der gemessene Abstand des Ultraschallsensors addiert. Somit erhält man die
+Position des zweiten Fahrzeugs in Abhängigkeit des Ultraschall Sensors.
+\begin{figure}[hbt]
+\centering
+\begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics*[width=\textwidth]{figures/zustand_position.png}
+\end{subfigure}
+    \caption{Plot der Position des 1. und 2. Fahrzeugs in Abhängigkeit der Zeit.
+    \label{fig:zustand_position}}
+\end{figure}    
+In Abbildung~\ref{fig:zustand_position} ist die jeweilige Position in
+Abhängigkeit der Zeit dargestellt. Die rosa Kurve (Fahrzeug 2) zeigt einen
+stetigen Anstieg, nachdem das Fahrzeug die Fahrt aufgenommen hat. Die grüne
+Kurve (Fahrzeug 1) zeigt einen um $0.5 \mathrm{m}$ verschobenen Verlauf, der
+über den initialen Abstand zustande kommt. Allerdings weist der Verlauf immer
+wieder Sprünge auf. Diese kommen durch die Kurvenfahrten Zustande, bei denen der
+Ultraschallsensor den Kontakt zum Fahrzeug verliert. Die generierte Position des
+Fahrzeugs 1 ist somit nicht vollständig und muss in diesen Zeiträumen korrigiert
+werden. Dies geschieht mit dem in Abschnitt~\ref{sec:kalmanfilter} beschriebenen
+Kalmanfilter. Basis dafür ist allerdings eine Fallunterscheidung, die
+automatisch erkennt, ob sich das Fahrzeug gerade in einer Kurve befindet oder
+nicht. Diese wird im Abschnitt~\ref{sec:fallunterscheidung} beschrieben.
+
+%-------------------------------------------------------------------------------
+\section{Fallunterscheidung}\label{sec:fallunterscheidung}
+
+%-------------------------------------------------------------------------------
+\section{Kalmanfilter}\label{sec:kalmanfilter}
+
+%-------------------------------------------------------------------------------
+\section{Lueneberger Beobachter}\label{sec:Lueneberger Beobachter}
+
+%-------------------------------------------------------------------------------
+\section{Zustandsrückführung}\label{sec:rueckfuehrung}
+
+%-------------------------------------------------------------------------------
+\section{Regelung}\label{sec:Regelung}
+
+%-------------------------------------------------------------------------------
+\subsection{PID-Regler}\label{subsec:PID-Regler}
+
+%-------------------------------------------------------------------------------
+\subsection{Optimale Regelung}\label{subsec:optimale_regelung}
