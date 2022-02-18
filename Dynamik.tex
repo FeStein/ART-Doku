@@ -1,0 +1,100 @@
+\chapter{Dynamik}\label{chp:dynamik}
+In diesem Teil geht es um die erste Aufgabe. Ziel ist die Bestimmung der Dynamik
+der Fahrzeuge und darauf aufbauend die Zustandsraumdarstellung. Anschließend
+sollen die relevanten Parameter identifiziert werden, wobei die Masse der
+Fahrzeuge mit $m=1.465 \mathrm{kg}$ gegeben ist.
+%-------------------------------------------------------------------------------
+\begin{figure}[hbt]
+\centering
+\begin{subfigure}{0.15\textwidth}
+    \centering
+    \includegraphics*[width=\textwidth]{figures/FKB_Auto.png}
+\end{subfigure}
+    \caption{Freikörperbild eines Einspurmodells für das Fahrzeug.
+    \label{fig:fkb_auto}}
+\end{figure}    
+%-------------------------------------------------------------------------------
+Zunächst wurde ein Freikörperbild für das betrachtete Auto erstellt, analog zum
+vereinfachten Einspurmodell
+\footnote{\url{https://de.wikipedia.org/wiki/Einspurmodell}} eines Fahrzeugs.
+Als Kräfte wirken lediglich die Antriebskraft $F_a$ die später als
+Eingangsgröße betrachtet wird, sowie die Widerstandskraft $F_w$. In der
+Widerstandskraft $F_w$ sind dabei alle Widerstände (Reibung, Trägheit, etc.)
+zusammengefasst. Dadurch ergibt sich folgende Bewegungsgleichung für ein
+einzelnes Auto im Zeitbereich:
+\begin{align*}
+    \sum F = m \frac{\diff^2 x}{\diff t^2} = F_A -F_W = -k_w \frac{\diff
+    x}{\diff t} + k_a \cdot u(t)
+\end{align*}
+Die Konstanten $k_a$ und $k_w$ beinhalten dabei jeweils die Parameter für den
+Antrieb, sowie die Dämpfung des Systems und müssen später genau bestimmt werden.
+Für Frequenzbereich ergibt sich nun:
+\begin{align*}
+    X(s) \cdot (m \cdot s^2 + k_w \cdot s) = U(s) \cdot k_a \\
+    G(s) = \frac{X(s)}{U(s)} = \frac{\frac{k_a}{k_w}}{\frac{m}{k_w} \cdot s^2 + s}
+\end{align*}
+Die Übertragungsfunktion ähnelt dabei einem PT1 Glied, wodurch die unbekannten
+Parameter $k_a$ und $k_w$ durch das Tankentenverfahren bestimmt werden können.
+Das Verfahren ist im matlab live Skript
+\textit{Uebertragungsfunktion\_test.mlx} zu sehen. Schlussendlich haben wir für
+die Parameter die folgenden Werte erhalten.
+\begin{align*}
+    k_w^{\mathrm{bestimmt}} = 7.0886\\
+    k_a^{\mathrm{bestimmt}} = 0.0315 
+\end{align*}
+Danach wurden uns die folgenden idealen Werte vorgegeben, mit denen wir auch
+weiter unsere Regelung gebildet haben:
+\begin{align*}
+    k_w = k_w^{\mathrm{ideal}} = 7.178\\
+    k_a = k_a^{\mathrm{ideal}} = 1.603 
+\end{align*}
+Anschließend wurde die oben hergeleitete DGL, welche die Dynamik des Systems
+beschreibt in eine Zustandsraumdarstellung gebracht:
+\begin{align*}
+\displaystyle\begin{bmatrix}
+    x_1\\
+    x_2
+\end{bmatrix} &= 
+\begin{bmatrix}
+    x\\
+    \frac{\diff x}{\diff t}
+\end{bmatrix}
+\\
+\displaystyle\begin{bmatrix}
+    \frac{\diff x_1}{\diff t}\\
+    \frac{\diff x_2}{\diff t}
+\end{bmatrix} &= 
+\begin{bmatrix}
+    x_2\\
+    \frac{\diff^2 x}{\diff t^2}
+\end{bmatrix}
+\\
+\displaystyle\begin{bmatrix}
+    \frac{\diff x_1}{\diff t}\\
+    \frac{\diff x_2}{\diff t}
+\end{bmatrix} &= 
+\begin{bmatrix}
+    0 & 1 \\
+    -\frac{k_w}{m} & 0
+\end{bmatrix}
+\begin{bmatrix}
+    x_1\\
+    x_2
+\end{bmatrix} + 
+\begin{bmatrix}
+    0\\
+    \frac{k_a}{m}
+\end{bmatrix} u
+\\
+\displaystyle\begin{bmatrix}
+    y_1 \\
+    y_2
+\end{bmatrix} &=
+\begin{bmatrix}
+    0 & r
+\end{bmatrix}
+\begin{bmatrix}
+    x_1\\
+    x_2
+\end{bmatrix}
+\end{align*}
