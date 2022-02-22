@@ -1,4 +1,7 @@
 \chapter{Abstandsregelung}\label{chp:Abstandsregelung}
+In diesem Kapitel geht es um die Bearbeitung von Aufgabe 3, sprich der
+Abstandsregelung des Systems. Dazu haben wir uns im wesentlichen an der
+Schematischen Darstellung in Abbildung~\ref{fig:abstand_as} gehalten.
 \begin{figure}[hbt]
 \centering
 \begin{subfigure}{0.69\textwidth}
@@ -8,10 +11,22 @@
     \caption{Schematischer Aufbau der Regelung in der Aufgabenstellung
     \label{fig:abstand_as}}
 \end{figure}    
+In Teil~\ref{sec:Übersicht Gesamtsystem} wird zunächst eine Übersicht über die
+gesamte Abstandsregelung gegeben, wobei dann in den darauffolgenden Kapiteln
+genauer auf die jeweiligen Einzelteile eingegangen wird.
 
 %-------------------------------------------------------------------------------
 \section{Übersicht Gesamtsystem}\label{sec:Übersicht Gesamtsystem}
 ToDo: Gesamtsystem müsste auch mal fertig sein
+\begin{figure}[hbt]
+\centering
+\begin{subfigure}{1.0\textwidth}
+    \centering
+    \includegraphics*[width=\textwidth]{figures/gesamtsystem.png}
+\end{subfigure}
+    \caption{Übersicht über das Gesamtsystem
+    \label{fig:gesamt}}
+\end{figure}    
 
 %-------------------------------------------------------------------------------
 \section{Zustandsgenerator}\label{sec:zustandsgenerator}
@@ -165,18 +180,108 @@ entsprechenden Intervall) und das Signal selbst noch auf Kurvenfahrt stehen muss
 
 %-------------------------------------------------------------------------------
 \section{Kalmanfilter}\label{sec:kalmanfilter}
+Bei der Implementierung des Kalman Filters war das Ziel eine zuverlässige
+Schätzung des Abstandes zu gewährleisten, wenn der Kurvenfahrt Switch aktiviert
+ist (sprich keine Abstandsschätzung mit Hilfe des Ultraschall Sensors möglich
+ist). Zur Implementierung wurde der Matlab Code Block verwendet, da so am
+einfachsten die jeweiligen Matrix Operationen umgesetzt wurden konnten. Als
+Input dienten die jeweiligen vorher festgelegten Matrizen die Input Signale
+$y_1$ (Position Fahrzeug 1) und $y_c$ (Switch Signal). Eine Übersicht ist in
+Abbildung~\ref{fig:kalmanuebersicht} abgebildet.
+\begin{figure}[hbt]
+\centering
+\begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics*[width=\textwidth]{figures/kalman_uebersicht.png}
+\end{subfigure}
+
+    \caption{Übersicht über die Implementierung des Kalman Filters
+    \label{fig:kalmanuebersicht}}
+\end{figure}    
+Die Bestimmung der Matrizen $A_T$, $C$, $Q_K$ und $R_K$ wurde analog zu den
+Vorlesungsfolien gemacht. Folgender Code wurde zur Berechnung des Kalman Filters
+verwendet:
+\begin{lstlisting}[language=matlab]
+function [X_Kp1_hat, P_Kp1] = kalmann_filer(y1, ...
+    ... y_c, A_T, C, Q_K, R_K, X0_hat,P_K)
+
+    %Anpassen der Unsicherheiten je nach Kurvenstatus 
+    if y_c == 0 
+        R_K = R_K * 1;
+    elseif y_c == 1
+        R_K = R_K * 100000;
+    end
+
+    %Schritt 1
+    K_K = P_K * C' * inv(C * P_K * C' + R_K);
+    P_Kp = (eye(2) - K_K * C) * P_K;
+    X_Kp_hat = X0_hat + K_K * (y1 - C * X0_hat);
+    
+    %Schritt 2: Neue Werte berechnen
+    X_Kp1_hat = A_T * X_Kp_hat;
+    P_Kp1 = A_T * P_Kp * A_T' * Q_K;
+end
+\end{lstlisting}
+Im wesentlichen ist die Implementierung analog zur Vorlesung. Wichtig ist, dass
+die Unsicherheitsmatrix $R_k$ angepasst wird in Abhängigkeit ob sich die
+Fahrzeuge in einer Kurvenfahrt befinden oder nicht. Initialisiert wird diese
+Matrix als Einheitsmatrix. Befinden sich die Fahrzeuge in der Kurve so wird der
+Wert 100000 hinzu multipliziert. Je größer die Werte auf der Diagonalen von
+$R_k$, desto weniger werden die Messwerte herangezogen, sondern die Schätzung.
+Dies bewirkt, dass für die Kurvenfahrt quasi alle Werte geschätzt werden,
+während bei der Geradeausfahrt lediglich die Messwerte herangezogen werden.
+\begin{figure}[hbt]
+\centering
+\begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics*[width=\textwidth]{figures/kalmanvgl.png}
+\end{subfigure}
+    \caption{Vergleich Abstand Ultraschallsensor zu Abstand mit Kalman Filter
+    \label{fig:kalmanvgl}}
+\end{figure}    
+In Abbildung~\ref{fig:kalmanvgl} sind die rohen Abstandssignale des
+Ultraschallsensors, sowie die errechnete Position des Kalman Filter dargestellt.
+Man kann deutlich sehen, dass sobald, der Ultraschallsensor ausfällt, die
+errechneten Werte des Kalman Filters die Abstandsmessung sinnvoll ergänzen.
+
+Nach dem Kalman Filter durchlaufen die Ergebnisse einen Führungsgrößengenerator.
+Hier wird nur der Sollabstand vom korrigierten Abstand des Kalman Filters
+abgezogen um eine Sinnvolle Führungsgröße zu erhalten.
 
 %-------------------------------------------------------------------------------
 \section{Lueneberger Beobachter}\label{sec:Lueneberger Beobachter}
-
-%-------------------------------------------------------------------------------
-\section{Zustandsrückführung}\label{sec:rueckfuehrung}
+Der Lueneberger Beobachter dient zur Rekonstruktion der nicht messbaren Zustände
+des Systems. Der Beobachter wurde anlog zum Buch \textit{Lunze - Regelungstechnik
+2}\footnote{Lunze 2020 - Regelungstechnik 2 - Mehrgrößensystem, Digitale Regelung,
+Seite 378} ausgelegt. Zunächst wurde dazu die Beobachtbarkeit und Steuerbarkeit
+aus der Zustandsraumdarstellung überprüft. Anschließend wurde über den
+\textit{place} Befehl in Matlab die Rückführungsmatrix erzeugt.
+\begin{figure}[hbt]
+\centering
+\begin{subfigure}{0.6\textwidth}
+    \centering
+    \includegraphics*[width=\textwidth]{figures/lueneberger.png}
+\end{subfigure}
+    \caption{Übersicht über den Lueneberger Beobachter
+    \label{fig:lueneberger}}
+\end{figure}    
+In Abbildung~\ref{fig:lueneberger} ist die Übersicht über die Implementierung
+gegeben. Im wesentlichen wurden die Matrix Operationen lediglich in
+Simulinkblöcke übersetzt. Schlussendlich wird noch ein Analog Digital Wandler
+hinzugefügt um die Ergebnisse des Lueneberger Beobachters auch für die
+Weiterverarbeitung (Zusammen mit dem Kalman Filter) verwenden zu können.
 
 %-------------------------------------------------------------------------------
 \section{Regelung}\label{sec:Regelung}
+In diesem Teil geht es um die Regelung des Abstandes. Die Führungsgröße (sprich
+der zu haltende Abstand) ist dabei variabel und kann im Matlab Skript durch eine
+Variable zur Initialisierung eingestellt werden.
 
 %-------------------------------------------------------------------------------
 \subsection{PID-Regler}\label{subsec:PID-Regler}
 
 %-------------------------------------------------------------------------------
 \subsection{Optimale Regelung}\label{subsec:optimale_regelung}
+
+%-------------------------------------------------------------------------------
+\subsection{Polzuweisung}\label{subsec:polzuweisung}
