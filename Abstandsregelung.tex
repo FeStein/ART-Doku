@@ -61,6 +61,107 @@ nicht. Diese wird im Abschnitt~\ref{sec:fallunterscheidung} beschrieben.
 
 %-------------------------------------------------------------------------------
 \section{Fallunterscheidung}\label{sec:fallunterscheidung}
+Ziel des Fallunterscheidung Blocks (in Matlab genannt Kurvenfahrt Switch) ist es
+ein Signal zu generieren, welches anzeigt ob sich eins der beiden Fahrzeuge
+gerade in einer Kurvenfahrt befindet oder ob beide Fahrzeuge geradeaus fahren.
+Von Fahrzeug 2 kann dafür der Lenkwinkel genutzt werden, von Fahrzeug 1
+lediglich die Abstandsmessung durch denn Ultraschallsensor.
+\begin{figure}[hbt]
+\centering
+\begin{subfigure}{1.0\textwidth}
+    \centering
+    \includegraphics*[width=\textwidth]{figures/abstand_switch_fulll.png}
+\end{subfigure}
+    \caption{Übersicht über den Switch zwischen Kurven-und Geradeausfahrt
+    \label{fig:switch-full}}
+\end{figure}
+In Abbildung~\ref{fig:switch-full} ist eine Übersicht des ganzen Blocks
+dargestellt. Zunächst haben wir uns Gedanken gemacht, welche Szenarien es für
+die Kurvenfahrt gibt:
+\begin{itemize}
+    \item Fahrzeug 1 ist in der Kurve - Kann durch den Ultraschallsensor
+        festgestellt werden
+    \item Fahrzeug 2 ist in der Kurve - Kann durch den Lenkwinkel der
+        Lenkregelung festgestellt werden
+    \item Weder Fahrzeug 1 noch Fahrzeug 2 befinden sich in der Kurve -
+        Geradeausfahrt
+\end{itemize}
+Diese Logik musste nun mit Simulink umgesetzt werden. Resultierend sollte ein
+Signal sein, welches 1 ausgibt, wenn sich keines der beiden Fahrzeuge in der
+Kurve befindet und 0 ausgibt, wenn sich mindestens eines der beiden Fahrzeuge in
+der Kurve befindet (und somit keine zuverlässige Abstandsmessung mehr gegeben
+ist). Wir gingen dabei so vor, dass wir versuchten ein Triggerpunkt für die
+Kurveneinfahrt von Fahrzeug 1 zu finden, sowie das gleiche für Fahrzeug 2 bei
+der Kurvenausfahrt. Die Punkte gemeinsam sollten dann jeweils das Signal von 1
+auf 0 und umgekehrt schalten.
+\begin{figure}[hbt]
+\centering
+\begin{subfigure}{0.9\textwidth}
+    \centering
+    \includegraphics*[width=\textwidth]{figures/mem_block.png}
+\end{subfigure}\\
+\begin{subfigure}{0.6\textwidth}
+    \centering
+    \includegraphics*[width=\textwidth]{figures/mem_sign.png}
+\end{subfigure}
+    \caption{Blockschaltbild (oben) und dazugehöriges Signal (unten) zum Signal
+        umschalten
+    \label{fig:umschalt}}
+
+\end{figure}    
+Dazu haben wir uns zunächst mit Hilfe eines Memory Blocks ein System überlegt,
+mit dem man durch Triggerpunkte ein Signal jeweils umschalten kann. In
+Abbildung~\ref{fig:umschalt} ist eine Übersicht gegeben. Das Signal
+\textit{M-IN} ist konstant 0 und gibt durch einen Peak den Befehl zum
+Umschalten. Daraufhin wird das Outputsignal \textit{M-OUT} konstant auf 1
+geschaltet. Dies wird durch das Reset Signal \textit{M-RES} rückgängig gemacht,
+welches von konstant 1 einen Peak auf 0 hat bei $T=5$. Durch dieses System
+können wir uns einen Switch bauen, welcher auf die jeweiligen Kurven Ein-und
+Austritten reagiert. Im nächsten Schritt haben wir uns dann Möglichkeiten
+überlegt um diese Fälle als Signale erfassen zu können.
+
+\begin{figure}[hbt]
+\centering
+\begin{subfigure}{0.4\textwidth}
+    \centering
+    \includegraphics*[width=\textwidth]{figures/abstand_ultraschall.png}
+\end{subfigure}
+\begin{subfigure}{0.4\textwidth}
+    \centering
+    \includegraphics*[width=\textwidth]{figures/abstand_lenkw.png}
+\end{subfigure}
+
+    \caption{Signale zur Erklärung des Switches zur Kurvenfahrt, Fahrzeug 1
+        (links) und Fahrzeug 2 (rechs)
+    \label{fig:umschaltsign}}
+\end{figure}    
+
+Zunächst schauen wir uns an, wann das Fahrzeug 1 in die Kurve eintritt (System 1
+in Abbildung~\ref{fig:switch-full}). Die relevanten Signale sind in
+Abbildung~\ref{fig:umschaltsign}~(links) dargestellt. Als Ausgangssignal dient
+der Ultraschallsensor. Bei jedem Kurveneintritt von Fahrzeug 1 springt dieser
+vom tatsächlichen Abstand auf $3\mathrm{m}$. Durch die Ableitung des Signals
+bekommt man einen sehr großen Peak (theoretisch unendlich wegen dem Sprung),
+welcher durch die Überprüfung $<1000$ auf ein boolsches Signal umgewandelt wird.
+Anschließend wird das oben gezeigte Triggerpunkt Verfahren verwendet um das
+Ausgangssignal \textit{SENSOR\_FZ2\_SWITCH} konstant auf 1 zu halten. Der Reset
+am Kurvenausgang kommt durch die Funktion von Fahrzeug 2 zustande, da die Kurve
+erst abgeschlossen ist, wenn Fahrzeug 2 (nach dem ersten Fahrzeug) die Kurve
+verlassen hat. Dies sieht man daran, dass das Signal
+\textit{SENSOR\_FZ2\_SWITCH} etwas länger als den Signalverlust des
+Ultraschallsensors aktiviert bleibt.
+
+Nun kommen wir zum Fahrzeug 2. Hier können wir die Bestimmung der Kurvenfahrt
+über den Lenkwinkel lösen (System 2 in Abbildung~\ref{fig:switch-full}). Die
+relevanten Signale sind in Abbildung~\ref{fig:umschaltsign}~(rechts)
+dargestellt. Zunächst wird überprüft ob der Lenkwinkel $\leq 3$ oder $\geq 3$
+ist, was unsere Bedingung zur Kurvenfahrt darstellt (Erfahrungswert).
+Anschließend wird durch den bereits beschriebenen Triggerpunkt Switch das
+resultierende Signal gebildet und Schlussendlich mit dem Signal der Kurvenfahrt
+von Fahrzeug 1 zusammengeführt. Als Reset Bedingung für beide Signale gilt, dass
+Fahrzeug 1 bereits die Kurvenfahrt abgeschlossen hat (Lenkwinkel im
+entsprechenden Intervall) und das Signal selbst noch auf Kurvenfahrt stehen muss
+(notwendig, dass das System nicht unnötig getriggert wird).
 
 %-------------------------------------------------------------------------------
 \section{Kalmanfilter}\label{sec:kalmanfilter}
