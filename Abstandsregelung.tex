@@ -275,11 +275,110 @@ Weiterverarbeitung (Zusammen mit dem Kalman Filter) verwenden zu können.
 \section{Regelung}\label{sec:Regelung}
 In diesem Teil geht es um die Regelung des Abstandes. Die Führungsgröße (sprich
 der zu haltende Abstand) ist dabei variabel und kann im Matlab Skript durch eine
-Variable zur Initialisierung eingestellt werden.
+Variable zur Initialisierung eingestellt werden. Gegeben ist bei der Regelung
+ein Signal für den Fehler:
+\begin{align*}
+    \mathrm{Fehler} = \mathrm{Distanz Fahrzeug 1} - \mathrm{Distanz Fahrzeug 2} - \mathrm{Sollabstand}
+\end{align*}
+Ziel jeder Regelung ist es daher den Fehler auf 0 zu halten, was einem
+Konstanten Sollabstand entspricht.
 
 %-------------------------------------------------------------------------------
 \subsection{PID-Regler}\label{subsec:PID-Regler}
+Der PID Regler wurde analog zum PID Regler der Lenkregelung aufgebaut. Als Input
+dient der oben beschriebene Fehler, als Output die Stellgröße Geschwindigkeit.
+Im Prinzip gibt es bei der Regelung 4 Freiheitsgrade:
+\begin{enumerate}
+    \item $k_P$ - Proportionalitätsglied des Reglers
+    \item $k_I$ - Integrationsglied des Reglers
+    \item $k_D$ - Differenzierungssglied des Reglers
+    \item \textit{Sollabstand} - Abstand der eingehalten werden soll
+\end{enumerate}
+Wichtig ist, dass der \textit{Sollabstand} ebenfalls variabel ist und einen
+Einfluss auf die Qualität der Regelung hat. Je größer die Differenz zwischen
+\textit{Sollabstand} und \textit{Initalabstand} ist, desto mehr muss die
+Regelung anfangs eingreifen.
 
+\begin{figure}[hbt]
+\centering
+\begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics*[width=\textwidth]{figures/pid05.png}\\
+    (a)
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics*[width=\textwidth]{figures/pidk031000.png}\\
+    (b)
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics*[width=\textwidth]{figures/pid03.png}\\
+    (c)
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics*[width=\textwidth]{figures/pid07.png}\\
+    (d)
+\end{subfigure}
+    \caption{Plots des Abstands für verschiedene PID Parameter Kombinationen:
+        $k_P = 1000$, $k_I =2$, $k_D =0$, $Sollabstand = 0.5 \mathrm{m}$ (a), 
+        $k_P = 1000$, $k_I =2$, $k_D =0$, $Sollabstand = 0.3 \mathrm{m}$ (b), 
+        $k_P = 20$, $k_I =2$, $k_D =0$, $Sollabstand = 0.3 \mathrm{m}$ (c), 
+        $k_P = 20$, $k_I =2$, $k_D =0$, $Sollabstand = 0.7 \mathrm{m}$ (d)
+    \label{fig:pid}}
+\end{figure}    
+
+Folgende Vorgehensweise wurde bei der Wahl der Parameter des PID Reglers
+verwendet:
+\begin{enumerate}
+    \item Betrachtung als reiner P-Regler, Variation des $k_P$ Wertes (durch
+        verdoppeln bzw. halbieren) bis die Reaktionsgeschwindigkeit ausreichend
+        schnell war. Anschließend testen des P-Wertes für verschiedene
+        Zollabstände.
+    \item Betrachtung als PI-Regler mit festem (zuvor festgelegten) $k_p$
+        Anteil. Anschließende festlegung von $k_I$, sodass die Stellgröße
+        ($\mathrm{Fehler} = 0$) erreicht wurde.
+    \item Feinjustierung mit dem $k_D$ Wert des D-Glieds um große Überschwinger
+        zu verhindern
+\end{enumerate}
+Auf Abbildung~\ref{fig:pid} sind verschiedene Parameterkombinationen und die
+Reaktion des Systems dargestellt. Die grüne Linie gibt dabei vor ob eine
+Kurvenfahrt (1) vorliegt oder nicht (0). 
+
+In Teil (a) ist ein Regler dargestellt mit stark überdrehtem P-Anteil.
+Allerdings ist der \textit{Solllabstand} gleich dem \textit{Initalabstand}.
+Dadurch ist der initiale Fehler 0, weswegen quasi nur die Geschwindigkeit
+gehalten werden muss. Dies funktioniert sehr gut, bis zum Kurvenaustritt. Dort
+sieht man einen Knick in der Geschwindigkeit von beiden Fahrzeugen. Dies liegt
+daran, dass der Abstand der beiden Fahrzeuge in der Kurve durch den Kalman
+Filter geschätzt wird. Am Kurvenaustritt wird wieder der tatsächliche Messwert
+verwendet. Der Unterschied zwischen der Kalman Schätzung und des tatsächlichen
+Messwertes macht sich dann in diesem Knick bemerkbar. Wie stark der Knick ist,
+hängt davon ab, wie gut die Regelung bis zum Kurveneintritt funktioniert hat.
+Außerdem ist ein Ziel der Regelung nach der Kurve wieder den tatsächlichen
+Abstand einzuhalten, wofür der Regler ebenfalls ausgelegt sein muss. In diesem
+Fall funktioniert das mit einem überdrehten P-Anteil recht gut.
+
+In Teil (b) ist die gleiche PID Parameterwahl dargestellt, jedoch mit einem
+\textit{Sollabstand} von $0.3 \mathrm{m}$. In diesem Fall ist ein initialer
+Fehler vorhanden. Man sieht, dass der Abstand viel zu gering wird, durch den
+überdrehten P-Anteil. Konkret bedeutet das, dass Fahrzeug 1 auf Fahrzeug 2
+auffährt, bis zum Eintritt in der Kurve. Dort wird der Abstand dann falsch
+geschätzt und die Fahrzeuge halten fast keinen Abstand. Am Austritt der Kurve
+kommt wiederum der richtige Abstand zum tragen, wodurch ein viel größerer Knick
+entsteht als in Teil (a). Daran sieht man, dass eine völlige Überdrehung des
+P-Anteils viel zu aggressiv ist.
+
+In Teil (c) und (d) sind die resultierenden PID Parameter dargestellt für die
+\textit{Sollabstände} $0.3\mathrm{m}$ und $0.3\mathrm{m}$. Man kann deutlich
+erkennen, dass die Überschwinger im Vergleich zu Teil (a,b) deutlich reduziert
+sind und auch der Kurvenausgang wesentlich sanfter dargestellt wird. Für den
+\textit{Sollabstand} $0.3 \mathrm{m}$ ist der Kurvenaustritt fast nicht zu
+bemerken.
+
+Durch weiteres Testen der PID Parameter, könnte sicherlich ein noch besseres
+Ergebnis erzielt werden, allerdings wird hiervon aus Zeitgründen abgesehen.
 %-------------------------------------------------------------------------------
 \subsection{Optimale Regelung}\label{subsec:optimale_regelung}
 
