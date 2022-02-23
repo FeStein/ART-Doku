@@ -381,6 +381,81 @@ Durch weiteres Testen der PID Parameter, könnte sicherlich ein noch besseres
 Ergebnis erzielt werden, allerdings wird hiervon aus Zeitgründen abgesehen.
 %-------------------------------------------------------------------------------
 \subsection{Optimale Regelung}\label{subsec:optimale_regelung}
+Die Optimale Regelung wurde analog zum Vorgehen im Buch Lunze - Regelungstechnik
+2 beschrieben \footnote{Lunze 2020 - Regelungstechnik 2 - Mehrgrößensystem,
+Digitale Regelung, Seite 341} ausgelegt.
+\begin{figure}[hbt]
+\centering
+\begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics*[width=\textwidth]{figures/opt_reg.png}
+\end{subfigure}
+    \caption{Übersícht zur Implementierung der optimalen Regelung
+    \label{fig:optreg}}
+\end{figure}    
+Die Implementierung der Matrix Multiplikationen in Simulink ist in
+Abbildung~\ref{fig:optreg} dargestellt. Die Matrix $K_{opt}$ zur optimalen Regelung
+wurde mit Hilfe des \textit{lqr} Befehls in Matlab errechnet, nachdem die
+Steuerbarkeit, sowie die Definitheit der Matrizen untersucht wurde. Als Input
+dienen dient der Fehler wie zuvor beschrieben.
+
+\begin{figure}[hbt]
+\centering
+\begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics*[width=\textwidth]{figures/opt_reg_raw_03.png}\\
+    (a)
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics*[width=\textwidth]{figures/opt_reg_vor_03.png}\\
+    (b)
+\end{subfigure}
+    \caption{Systemvariablen bei der optimalen Regelung ohne Vorfilter (a) und
+        mit Vorfilter (b)
+    \label{fig:optreggrap}}
+\end{figure}    
+
+Auf Abbildung~\ref{fig:optreggrap} sind die resultierenden Systemgrößen der
+Regelung dargestellt. Zunächst haben wir die optimale Regelung ohne Vorfilter
+($N_{vor}$ = 0) implementiert. Es ergibt sich der in Bild (a) angegebene
+Verlauf. Der Sollabstand ist $0.5 \mathrm{m}$. Man kann erkennen, dass zwar ein
+konstanter Abstand eingehalten wird, der Fehler aber konstant bei ca. 1 bleibt.
+Dies bedeutet, dass der tatsächliche Abstand vom Sollabstand um $1 \mathrm{m}$
+abweicht. Dies führt auch dazu, dass die Kurvenfahrten unnatürlich lange werden,
+da der Abstand so groß ist, dass sich fast immer ein Fahrzeug in der Kurve
+befindet. Um dies zu verhindern kann eine Vorsteuerung eingesetzt werden. Dies
+funktioniert folgendermaßen:
+
+\textit{Die Vorsteuerung bezeichnet ein Element des Reglerentwurfs, das die
+    Stellgröße mit einem Wert beaufschlagt, der unabhängig von den Zuständen der
+    Regelstrecke und daraus resultierenden Messungen ist. Bei der
+    Positionssteuerung wird bei einem Sollwertsprung für die Position meist ein
+    Referenzprofil für Geschwindigkeit und Beschleunigung generiert.
+    Entsprechend dem Sollwertverlauf und einem linearisierten Strecken-Verhalten
+    wird eine Vorsteuerung berechnet, die ohne weitere Stellgrößenanteile die
+    linearisierte Strecke entsprechend den Referenzprofilen positionieren würde.
+Der eigentliche Regler, also die anderen Stellgrößenanteile, müssen dann nur
+noch Nichtlinearitäten und unbekannte äußere Einflüsse ausregeln}
+\footnote{\url{https://de.wikipedia.org/wiki/Vorsteuerung}}.
+
+In unserem Fall haben wir durch den Kalman Filter bereits einen Wert für die
+Geschwindigkeit des ersten Fahrzeugs. Diese kann nun zusammen mit einem
+Vorfilter $N_{vor}$ = 4.5 als zusätzlicher Term auf den Output der Optimalen
+Regelung addiert werden. Dies entspricht quasi dem Referenzprofil für die
+Geschwindigkeit. Durch ausprobieren wurde dies so lange gemacht, bis der Fehler
+im eingeschwungenen Zustand 0 wird (sprich konstanter Abstand).
+
+Auf Teil (b) sieht man das resultierende Ergebnis. Nach einem großen
+Überschwinger, stellt sich das Signal auf den Fehler ein. Anschließend wird in
+der Kurve die Position und Geschwindigkeit von Fahrzeug 1 durch den Kalman
+Filter geschätzt. Ähnlich wie beim PID Regler kommt es beim Kurvenaustritt zu
+einer Starken Korrektur (In der Simulaltion crashen die Fahrzeuge fast). Für die
+weiteren Kurven kann der Abstand aber immer besser konstant gehalten werden.
+Sprich nach einer kurzen Einschwungzeit (nach der ersten Kurve) funktioniert die
+optimale Regelung für das System gut. Für eine weitere Verbesserung müsste unter
+anderem die Beschleunigung des Fahrzeugs in die Vorsteuerung mit einbezogen
+werden um vor allem dem großen Fehler zu Beginn der Fahrt zu eliminieren.
 
 %-------------------------------------------------------------------------------
 \subsection{Polzuweisung}\label{subsec:polzuweisung}
