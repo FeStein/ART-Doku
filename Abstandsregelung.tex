@@ -459,3 +459,55 @@ werden um vor allem dem großen Fehler zu Beginn der Fahrt zu eliminieren.
 
 %-------------------------------------------------------------------------------
 \subsection{Polzuweisung}\label{subsec:polzuweisung}
+Die Polzuweisung wurde analog zum Buch Lunze Regelungstechnik 2 \footnote{Lunze
+2020 - Regelungstechnik 2 - Mehrgrößensystem, Digitale Regelung, Seite 249}
+implementiert. Eine Übersicht der Implementierung in Simulink ist in
+Abbildung~\ref{fig:polzuw} dargestellt.
+\begin{figure}[hbt]
+\centering
+\begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics*[width=\textwidth]{figures/polzuw_ueb.png}
+\end{subfigure}
+    \caption{Übersicht über die Implementierung der Regelung mit Polzuweisung.
+    \label{fig:polzuw}}
+\end{figure}    
+
+Zunächst wurde die Steuerbarkeit des Systems überprüft. Anschließend wurde durch
+den \textit{place} Befehl in Matlab die Reglermatrix $K_{pol}$ bestimmt. Die
+Pole wurden anschließend durch systematisches ausprobieren bestimmt, sodass sich
+die Werte $[-1, -5]$ ergaben. Wichtig ist dabei, dass diese links von den
+Eigenwerten liegen und beide negativ sind.
+
+\begin{figure}[hbt]
+\centering
+\begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics*[width=\textwidth]{figures/polzuw_raw.png}\\
+    (a)
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics*[width=\textwidth]{figures/polzuw_off.png}\\
+    (b)
+\end{subfigure}
+    \caption{Plots der Systemvariablen nach der Regelung mit Polzuweisung ohne
+        (a) und mit Vorfilter (b)
+    \label{fig:polplot}}
+\end{figure}    
+
+In Abbildung~\ref{fig:polplot} sind die Plots der Systemvariablen bei der
+Regelung mit Polzuweisung dargestellt. In Teil (a) geschieht dies ohne
+Vorsteuerung. Man kann ein ähnliches Verhalten zur optimalen Regelung
+sehen, bei dem sich ein relativ großer Abstand, sowie eine großer konstanter
+Fehler (Offset) bildet. Ähnlich wie bei der Polzuweisung kann der konstante
+Fehler durch eine Vorsteuerung behoben werden.
+
+Das Verhalten mit Vorsteuerung ($pol_{offset} = 0.65$) ist in Teil (b) zu sehen.
+Der Fehler ist fast durchweg auf 0 und von Beginn an kann ein konstanter Abstand
+eingehalten werden. Der Fehler ist fast durchweg auf 0 und von Beginn
+an kann ein konstanter Abstand eingehalten werden. Auch bei der Kurvenausfahrt
+ist fast kein Sprung in der Positions- bzw. Geschwindigkeitserkennung zu sehen.
+Somit ist ein konstant gutes Regelungsergebnis zu sehen.
+
+
