@@ -380,6 +380,65 @@ bemerken.
 
 Durch weiteres Testen der PID Parameter, könnte sicherlich ein noch besseres
 Ergebnis erzielt werden, allerdings wird hiervon aus Zeitgründen abgesehen.
+
+%-------------------------------------------------------------------------------
+\subsection{Polzuweisung}\label{subsec:polzuweisung}
+Die Polzuweisung wurde analog zum Buch Lunze Regelungstechnik 2 \footnote{Lunze
+2020 - Regelungstechnik 2 - Mehrgrößensystem, Digitale Regelung, Seite 249}
+implementiert. 
+\begin{figure}[hbt]
+\centering
+\begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics*[width=\textwidth]{figures/polzuw_ueb.png}
+\end{subfigure}
+    \caption{Übersicht über die Implementierung der Regelung mit Polzuweisung.
+    \label{fig:polzuw}}
+\end{figure}   
+Eine Übersicht der Implementierung in Simulink ist in Abbildung~\ref{fig:polzuw}
+dargestellt. Zunächst wurde die Steuerbarkeit des Systems überprüft.
+Anschließend wurde durch den \textit{place} Befehl in Matlab die Reglermatrix
+$K_{pol}$ bestimmt. Die Pole wurden anschließend durch systematisches
+ausprobieren bestimmt, sodass sich die Werte $[-8, -7.0]$ ergaben. Wichtig ist
+dabei, dass diese links von den Eigenwerten liegen und beide negativ sind. Eine
+ideale Polzuweisung durch ein geeignetes Verfahren ist allerdings nicht möglich.
+\begin{figure}[hbt]
+\centering
+\begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics*[width=\textwidth]{figures/polzuw_raw.png}\\
+    (a)
+\end{subfigure}
+\begin{subfigure}{0.49\textwidth}
+    \centering
+    \includegraphics*[width=\textwidth]{figures/polzuw_off.png}\\
+    (b)
+\end{subfigure}
+    \caption{Plots der Systemvariablen nach der Regelung mit Polzuweisung ohne
+        (a) und mit Vorfilter (b)
+    \label{fig:polplot}}
+\end{figure}    
+
+In Abbildung~\ref{fig:polplot} sind die Plots der Systemvariablen bei der
+Regelung mit Polzuweisung dargestellt. In Teil (a) geschieht dies ohne
+Vorsteuerung. Man kann ein ähnliches Verhalten zur optimalen Regelung
+sehen, bei dem sich ein relativ großer Abstand, sowie eine großer konstanter
+Fehler (Offset) bildet. Ähnlich wie bei der Polzuweisung kann der konstante
+Fehler durch eine Vorsteuerung behoben werden.
+
+Das Verhalten mit Vorsteuerung ($pol_{offset} = 0.16$) ist in Teil (b) zu sehen.
+Der Fehler ist fast durchweg nähe der 0 und von Beginn an kann ein relativ
+konstanter Abstand eingehalten werden. Der Fehler ist fast durchweg auf 0 und
+von Beginn an kann ein konstanter Abstand eingehalten werden. Auch bei der
+Kurvenausfahrt ist fast kein Sprung in der Positions- bzw.
+Geschwindigkeitserkennung zu sehen.  Somit ist ein konstant gutes
+Regelungsergebnis zu sehen. 
+
+Problematisch ist immer noch, dass nicht exakt 0 erreicht werden konnte. Durch
+eine bessere Wahl der Pole, sowie des Offsets könnte die Kurve noch so
+verschoben werden, dass ein noch besseres Regelungsergebnis erzielt werden
+kann.
+
 %-------------------------------------------------------------------------------
 \subsection{Optimale Regelung}\label{subsec:optimale_regelung}
 Die Optimale Regelung wurde analog zum Vorgehen im Buch Lunze - Regelungstechnik
@@ -458,62 +517,27 @@ optimale Regelung für das System gut. Für eine weitere Verbesserung müsste un
 anderem die Beschleunigung des Fahrzeugs in die Vorsteuerung mit einbezogen
 werden um vor allem dem großen Fehler zu Beginn der Fahrt zu eliminieren.
 
-%-------------------------------------------------------------------------------
-\subsection{Polzuweisung}\label{subsec:polzuweisung}
-Die Polzuweisung wurde analog zum Buch Lunze Regelungstechnik 2 \footnote{Lunze
-2020 - Regelungstechnik 2 - Mehrgrößensystem, Digitale Regelung, Seite 249}
-implementiert. 
-\begin{figure}[hbt]
-\centering
-\begin{subfigure}{0.49\textwidth}
-    \centering
-    \includegraphics*[width=\textwidth]{figures/polzuw_ueb.png}
-\end{subfigure}
-    \caption{Übersicht über die Implementierung der Regelung mit Polzuweisung.
-    \label{fig:polzuw}}
-\end{figure}   
-Eine Übersicht der Implementierung in Simulink ist in Abbildung~\ref{fig:polzuw}
-dargestellt. Zunächst wurde die Steuerbarkeit des Systems überprüft.
-Anschließend wurde durch den \textit{place} Befehl in Matlab die Reglermatrix
-$K_{pol}$ bestimmt. Die Pole wurden anschließend durch systematisches
-ausprobieren bestimmt, sodass sich die Werte $[-8, -7.0]$ ergaben. Wichtig ist
-dabei, dass diese links von den Eigenwerten liegen und beide negativ sind. Eine
-ideale Polzuweisung durch ein geeignetes Verfahren ist allerdings nicht möglich.
-\begin{figure}[hbt]
-\centering
-\begin{subfigure}{0.49\textwidth}
-    \centering
-    \includegraphics*[width=\textwidth]{figures/polzuw_raw.png}\\
-    (a)
-\end{subfigure}
-\begin{subfigure}{0.49\textwidth}
-    \centering
-    \includegraphics*[width=\textwidth]{figures/polzuw_off.png}\\
-    (b)
-\end{subfigure}
-    \caption{Plots der Systemvariablen nach der Regelung mit Polzuweisung ohne
-        (a) und mit Vorfilter (b)
-    \label{fig:polplot}}
-\end{figure}    
-
-In Abbildung~\ref{fig:polplot} sind die Plots der Systemvariablen bei der
-Regelung mit Polzuweisung dargestellt. In Teil (a) geschieht dies ohne
-Vorsteuerung. Man kann ein ähnliches Verhalten zur optimalen Regelung
-sehen, bei dem sich ein relativ großer Abstand, sowie eine großer konstanter
-Fehler (Offset) bildet. Ähnlich wie bei der Polzuweisung kann der konstante
-Fehler durch eine Vorsteuerung behoben werden.
-
-Das Verhalten mit Vorsteuerung ($pol_{offset} = 0.16$) ist in Teil (b) zu sehen.
-Der Fehler ist fast durchweg nähe der 0 und von Beginn an kann ein relativ
-konstanter Abstand eingehalten werden. Der Fehler ist fast durchweg auf 0 und
-von Beginn an kann ein konstanter Abstand eingehalten werden. Auch bei der
-Kurvenausfahrt ist fast kein Sprung in der Positions- bzw.
-Geschwindigkeitserkennung zu sehen.  Somit ist ein konstant gutes
-Regelungsergebnis zu sehen. 
-
-Problematisch ist immer noch, dass nicht exakt 0 erreicht werden konnte. Durch
-eine bessere Wahl der Pole, sowie des Offsets könnte die Kurve noch so
-verschoben werden, dass ein noch besseres Regelungsergebnis erzielt werden
-kann.
-
-
+\subsection{Korrekturen}
+Nach dem Gespräch heute mit Oscard ist uns aufgefallen, dass die Optimale
+Regelung nicht ganz korrekt implementiert wurde. Statt dem Gesamten
+Zustandsvektor mit Position und Geschwindigkeit haben wir lediglich die
+Position als Input verwendet. In der aktuellen Version in Matlab konnten
+wir diesen Fehler beheben. Allerdings konnten wir keine stabile Kombination von
+Parametern finden, welche eine konstante Abstandsregelung zugelassen hat, ohne
+dass größere Abweichung zustande kamen. Mögliche Fehlerquellen sind:
+\begin{itemize}
+    \item Probleme beim Implementieren des Lueneberger Beobachters (der Output
+        für die Geschwindigkeit ist unserer Meinung nach nicht korrekt)
+    \item Probleme bei der Implementierung des Kalman Filters (der Output der
+        Geschwindigkeit hat einen leichten Offset)
+    \item Probleme bei der idealen Wahl der Parameter: Die Parameter wurden
+        oftmals nur durch ausprobieren (Verändern eines Parameters, festhalten
+        der anderen Parameter) gewählt. Dies machte das Ganze sehr mühselig
+        wodurch wir keine ideale Parameterkombinationen finden konnten
+\end{itemize}
+Die Regelung über den PID Regler funktioniert unserer Meinung nach
+fast einwandfrei, da als Eingangsgröße lediglich die Positionsabweichung
+verwendet wurde, welche sowohl aus dem Lueneberger Beobachter als auch aus dem
+Kalman Filter keinen Offset ausweist. Im Gegensatz dazu haben wir bei der
+optiamlen Regelung eine dauerhafte Regelabweichung von ca $0.4$, welche wir
+durch unser wissen nicht beheben konnten.
